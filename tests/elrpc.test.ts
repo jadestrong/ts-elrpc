@@ -2,6 +2,8 @@ import { spawn } from "child_process";
 import { describe, expect, it } from "@jest/globals";
 import * as epc from '../src/index'
 import PeerProcess from "../src/PeerProcess";
+import EPCRuntimeException from "../src/EPCRuntimeException";
+import { EPCStackException } from "../src/exception";
 
 const _b = (name: string) => {
   return `./tests/${name}`;
@@ -57,8 +59,6 @@ describe('01 Process', () => {
   });
 });
 
-// code: EPCServer -> Promise()
-
 const withEPC = async (progname: string, callback: (cl: PeerProcess) => Promise<void>) => {
   let client: PeerProcess | null | void = null;
   try {
@@ -88,7 +88,7 @@ describe('02 Echo', () => {
         expect(ret2).toBe(12345);
 
         const ret3 = await client.callMethod('echo', [1, "2", 3.2, false]);
-        expect(Array.isArray(ret)).toBeTruthy();
+        expect(Array.isArray(ret3)).toBeTruthy();
         expect(ret3).toEqual([1, "2", 3.2, null]); // false -> null
         done()
       } catch(e) {
@@ -98,22 +98,58 @@ describe('02 Echo', () => {
   });
 });
 
-// describe('03 Add', () => {
-//   it('should add objects', (done) => {
-//     withEPC('_add.js', async (client) => {
-//       try {
-//         const ret = await client.callMethod('add', 1, 2);
-//         expect(typeof ret).toBe('number');
-//         expect(ret).toBe(3);
+describe('03 Add', () => {
+  it('should add objects', (done) => {
+    withEPC('_add.js', async (client) => {
+      try {
+        const ret = await client.callMethod('add', 1, 2);
+        expect(typeof ret).toBe('number');
+        expect(ret).toBe(3);
 
-//         const ret1 = await client.callMethod('add', 'A', 'B');
-//         expect(typeof ret1).toBe('string');
-//         expect(ret1).toBe('AB');
+        const ret1 = await client.callMethod('add', 'A', 'B');
+        expect(typeof ret1).toBe('string');
+        expect(ret1).toBe('AB');
 
-//         done()
-//       } catch(e) {
-//         done(e)
-//       }
-//     })
-//   });
-// });
+        done()
+      } catch(e) {
+        done(e)
+      }
+    })
+  });
+});
+
+describe('04 Errors', () => {
+  it('should return runtime errors', (done) => {
+    withEPC('_error.js', async (client) => {
+      try {
+        const ret = await client.callMethod('raise_error');
+        console.log(ret)
+      } catch(e) {
+        console.log('e', e)
+        expect(e.message).toBe("Raised!");
+      }
+    }).then(done).catch(e => done(e));
+  });
+
+  it('should return an epc-stack error for wrong object', done => {
+    withEPC('_error.js', async (client) => {
+      try {
+        const ret = await client.callMethod('num_error');
+        console.log(ret);
+      } catch(e) {
+        expect(e instanceof EPCStackException).toBeTruthy()
+        expect(e.message).toMatch('Infinite can not be encoded');
+      }
+
+      try {
+        const ret = await client.callMethod('echo', new Date());
+        console.log(ret);
+      } catch(e) {
+        expect(e instanceof EPCStackException).toBeTruthy();
+        expect(e.message).toMatch('Unknown object type');
+      }
+    })
+      .then(done)
+      .catch((e) => done(e));
+  });
+});

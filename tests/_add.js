@@ -1,4 +1,4 @@
-import * as epc from '../src'
+import * as epc from '../dist/ts-elrpc.mjs'
 
 let server;
 epc.startServer([], 8888).then(server => {

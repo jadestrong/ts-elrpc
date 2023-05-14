@@ -31,7 +31,7 @@ enum MsgType {
   CALL = "call",
   RETURN = "return",
   RETURN_ERROR = "return-error",
-  EPC_ERROR = "epc_error",
+  EPC_ERROR = "epc-error",
   METHODS = "methods",
 }
 
@@ -273,7 +273,7 @@ class RPCServer {
   private send() {
     if (this.queueStream.length === 0) return; // do nothing
     const msg = this.queueStream.shift();
-    if (!msg) return; // ignore finish signal
+    if (msg == null) return; // ignore finish signal
     this.logger.debug(`Stream.write: ${msg.uid}`);
 
     let strBody: string;

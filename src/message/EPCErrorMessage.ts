@@ -1,3 +1,4 @@
+import symbol from "../symbol";
 import Message from "./Message";
 
 export default class EPCErrorMessage extends Message {
@@ -9,6 +10,6 @@ export default class EPCErrorMessage extends Message {
     }
 
     toJSON(): any[] {
-        throw new Error("Method not implemented.");
+      return [symbol('epc-error'), this.uid, this.errorMessage];
     }
 }
