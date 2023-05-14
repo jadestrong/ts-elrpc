@@ -7,55 +7,55 @@ const _b = (name: string) => {
   return `./tests/${name}`;
 }
 
-// describe('01 Process', () => {
-//   it('should start with port num and getting it', (done) => {
-//     try {
-//       const cp = spawn('node', [_b('_echo.js')])
-//       cp.stdout.on('data', (data) => {
-//         try {
-//           const port = parseInt(data.toString(), 10)
-//           expect(port).toBe(8888);
-//           done();
-//         } catch (err) {
-//           done(err)
-//         } finally {
-//           cp.kill()
-//         }
-//       });
+describe('01 Process', () => {
+  it('should start with port num and getting it', (done) => {
+    try {
+      const cp = spawn('node', [_b('_echo.js')])
+      cp.stdout.on('data', (data) => {
+        try {
+          const port = parseInt(data.toString(), 10)
+          expect(port).toBe(8888);
+          done();
+        } catch (err) {
+          done(err)
+        } finally {
+          cp.kill()
+        }
+      });
 
-//       cp.stderr.on('data', (data) => {
-//         // something wrong
-//         done(data.toString())
-//       });
-//     } catch (err) {
-//       done(err)
-//     }
-//   });
+      cp.stderr.on('data', (data) => {
+        // something wrong
+        done(data.toString())
+      });
+    } catch (err) {
+      done(err)
+    }
+  });
 
-//   it('should start without port num and getting the port num', (done) => {
-//     try {
-//       const cp = spawn('node', [_b('_process.js')]);
-//       cp.stdout.on('data', data => {
-//         try {
-//           const port = parseInt(data.toString(), 10);
-//           expect(port > 0).toBeTruthy();
-//           done();
-//         } catch (err) {
-//           done(err);
-//         } finally {
-//           cp.kill();
-//         }
-//       });
+  it('should start without port num and getting the port num', (done) => {
+    try {
+      const cp = spawn('node', [_b('_process.js')]);
+      cp.stdout.on('data', data => {
+        try {
+          const port = parseInt(data.toString(), 10);
+          expect(port > 0).toBeTruthy();
+          done();
+        } catch (err) {
+          done(err);
+        } finally {
+          cp.kill();
+        }
+      });
 
-//       cp.stderr.on('data', data => {
-//         // something wrong
-//         done(data.toString());
-//       });
-//     } catch (err) {
-//       done(err);
-//     }
-//   });
-// });
+      cp.stderr.on('data', data => {
+        // something wrong
+        done(data.toString());
+      });
+    } catch (err) {
+      done(err);
+    }
+  });
+});
 
 // code: EPCServer -> Promise()
 
@@ -77,7 +77,7 @@ const withEPC = async (progname: string, callback: (cl: PeerProcess) => Promise<
 
 describe('02 Echo', () => {
   it('should echo a message', (done) => {
-    withEPC('_echo2.js', async (client) => {
+    withEPC('_echo.js', async (client) => {
       try {
         const ret = await client.callMethod('echo', 'hello');
         expect(typeof ret === 'string').toBeTruthy();
