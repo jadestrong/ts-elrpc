@@ -6,7 +6,7 @@ class Method {
     argdoc?: string;
     docstring?: string;
 
-    constructor(name: string, body: any, argdoc?: string, docstring?: string) {
+    constructor(name: string, body: any, argdoc: string = '', docstring: string = '') {
         this.name = name;
         this.body = body;
         this.argdoc = argdoc;
