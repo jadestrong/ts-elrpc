@@ -96,20 +96,20 @@ export function isPlistLikeArray(input: Array<any>) {
   }
   for (let i = 0; i < input.length; i += 2) {
     const key = input[i];
-    const value = input[i + 1];
+    // const value = input[i + 1];
     if (typeof key !== 'string' || !key.startsWith(':')) {
       return false;
     }
-    if (Array.isArray(value)) {
-      if (!isPlistLikeArray(value) && !value.every(isPlistLikeArray)) {
-        return false;
-      }
-    } else if (typeof value === 'object' && value !== null) {
-      const values = Object.values(value);
-      if (values.some(v => Array.isArray(v) ? !v.every(isPlistLikeArray) : typeof v === 'object' && v !== null)) {
-        return false;
-      }
-    }
+    // if (Array.isArray(value)) {
+    //   if (!isPlistLikeArray(value) && !value.every(isPlistLikeArray)) {
+    //     return false;
+    //   }
+    // } else if (typeof value === 'object' && value !== null) {
+    //   const values = Object.values(value);
+    //   if (values.some(v => Array.isArray(v) ? !v.every(isPlistLikeArray) : typeof v === 'object' && v !== null)) {
+    //     return false;
+    //   }
+    // }
   }
   return true;
 }
@@ -129,8 +129,9 @@ export function convertPlistLikeArrayToObject(input: Array<any>) {
       } else if (value.every(isPlistLikeArray)) {
         result[key] = value.map(convertPlistLikeArrayToObject);
       } else {
-        console.log('invalid value', value);
-        throw new Error('Value is not a plist-like array');
+        result[key] = value;
+        // console.log('invalid value', value);
+        // throw new Error('Value is not a plist-like array');
       }
     } else if (typeof value === 'object' && value !== null) {
       const entries = Object.entries(value);
