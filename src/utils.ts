@@ -89,3 +89,64 @@ export function symbol(name: string) {
 export function quote(obj: any) {
     return new SExpQuoted(obj);
 }
+
+export function isPlistLikeArray(input: Array<any>) {
+  if (!Array.isArray(input) || input.length % 2 !== 0) {
+    return false;
+  }
+  for (let i = 0; i < input.length; i += 2) {
+    const key = input[i];
+    const value = input[i + 1];
+    if (typeof key !== 'string' || !key.startsWith(':')) {
+      return false;
+    }
+    if (Array.isArray(value)) {
+      if (!isPlistLikeArray(value) && !value.every(isPlistLikeArray)) {
+        return false;
+      }
+    } else if (typeof value === 'object' && value !== null) {
+      const values = Object.values(value);
+      if (values.some(v => Array.isArray(v) ? !v.every(isPlistLikeArray) : typeof v === 'object' && v !== null)) {
+        return false;
+      }
+    }
+  }
+  return true;
+}
+
+export function convertPlistLikeArrayToObject(input: Array<any>) {
+  if (!isPlistLikeArray(input)) {
+    return input;
+    // throw new Error('Input is not a plist-like array');
+  }
+  const result = {};
+  for (let i = 0; i < input.length; i += 2) {
+    const key = input[i].substring(1);
+    const value = input[i + 1];
+    if (Array.isArray(value)) {
+      if (isPlistLikeArray(value)) {
+        result[key] = convertPlistLikeArrayToObject(value);
+      } else if (value.every(isPlistLikeArray)) {
+        result[key] = value.map(convertPlistLikeArrayToObject);
+      } else {
+        console.log('invalid value', value);
+        throw new Error('Value is not a plist-like array');
+      }
+    } else if (typeof value === 'object' && value !== null) {
+      const entries = Object.entries(value);
+      const convertedEntries = entries.map(([k, v]) => {
+        if (Array.isArray(v)) {
+          return [k, v.map(v2 => isPlistLikeArray(v2) ? convertPlistLikeArrayToObject(v2) : v2)];
+        } else if (typeof v === 'object' && v !== null) {
+          return [k, convertPlistLikeArrayToObject(Object.entries(v))];
+        } else {
+          return [k, v];
+        }
+      });
+      result[key] = Object.fromEntries(convertedEntries);
+    } else {
+      result[key] = value;
+    }
+  }
+  return result;
+}

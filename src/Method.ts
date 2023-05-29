@@ -1,4 +1,4 @@
-import { tryPListToObj } from "./utils";
+import { convertPlistLikeArrayToObject } from "./utils";
 
 class Method {
     name: string;
@@ -16,7 +16,7 @@ class Method {
     invoke(args: any) {
         args = Array.isArray(args) ? args : [args];
         // 将参数中可能存在的 plist 转换成对象结构，再透传给注册的函数
-        args = args.map(tryPListToObj);
+        args = args.map(convertPlistLikeArrayToObject);
         return this.body.apply(null, args);
     }
 }
