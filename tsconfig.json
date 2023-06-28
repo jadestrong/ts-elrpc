@@ -4,10 +4,8 @@
         "module": "esnext",
         "target": "es2020",
         "lib": ["es2021", "dom"],
-        "sourceMap": true,
         "moduleResolution": "node",
         "esModuleInterop": true,
-        "declaration": true,
         "sourceMap": true,
         "outDir": ".build"
     },
