@@ -2,10 +2,11 @@ import os from 'os';
 import path from "path";
 import * as log4js from "log4js";
 
-const tmpDir = os.tmpdir()
-const logfile = path.resolve(tmpDir, `elrpc-${process.pid}.log`);
 const MAX_LOG_SIZE = 1024 * 1024;
 const MAX_LOG_BACKUPS = 10;
+
+const tmpDir = os.tmpdir()
+export const logfile = path.resolve(tmpDir, `elrpc-${process.pid}.log`);
 
 export const initLogger = () => {
   // if (_defaultLogger) return _defaultLogger;

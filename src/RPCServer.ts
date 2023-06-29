@@ -13,7 +13,7 @@ import {
   ErrorMessage,
 } from "./message";
 import { EPCRuntimeException, EPCStackException, Exception } from "./exception";
-import { initLogger } from "./logger";
+import { initLogger, logfile } from "./logger";
 
 enum QueueState {
   GO,
@@ -42,6 +42,7 @@ class RPCServer {
   methods: Record<string, Method> = {};
 
   logger = initLogger();
+  logfile = logfile
 
   session: Record<number, CallMessage | MethodsMessage> = {};
 
