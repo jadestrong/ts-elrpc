@@ -40,11 +40,7 @@ export const initLogger = () => {
   });
 
   const logger = log4js.getLogger("log");
-  logger.level = "debug";
-  // logger.setLevel("DEBUG"); // debug level
-  // logger.setLevel("WARN");
-
-  // _defaultLogger = logger;
+  logger.level = 'off';
 
   return logger;
 };
