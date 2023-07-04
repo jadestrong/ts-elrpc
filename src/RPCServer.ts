@@ -62,7 +62,7 @@ class RPCServer {
     });
 
     this.socket.on("end", () => {
-      this.logger.info("!Socket closed by peer");
+      this.logger?.info("!Socket closed by peer");
       this.stop();
     });
 
@@ -98,7 +98,7 @@ class RPCServer {
     const name = symbol(args.shift());
     const d = new Deferred<T>();
     const uid = genuid();
-    this.logger.debug('args: ', args);
+    this.logger?.debug('args: ', args);
     const msg = new CallMessage(uid, name, args, d);
     this.session[uid] = msg;
     this.queueMessage(msg);
@@ -115,9 +115,9 @@ class RPCServer {
   }
 
   stop() {
-    this.logger.debug("Stop Signal");
+    this.logger?.debug("Stop Signal");
     if (this.socketState === SocketState.SOCKET_OPENED) {
-      this.logger.debug("PeerProcess.stop: received!");
+      this.logger?.debug("PeerProcess.stop: received!");
       this.socketState = SocketState.SOCKET_CLOSING;
       this.socket.end();
       this.queueMessage(null);
@@ -126,7 +126,7 @@ class RPCServer {
       this.closeHooks.forEach((hook) => {
         hook && hook.call(this);
       });
-      this.logger.debug("PeerProcess.stop: completed");
+      this.logger?.debug("PeerProcess.stop: completed");
     }
   }
 
@@ -137,42 +137,42 @@ class RPCServer {
     const buf = this.receiveBuffer;
     if (buf.length >= 6) {
       const str = buf.subarray(0, 6).toString();
-      this.logger.debug(`<< H:${str}`);
+      this.logger?.debug(`<< H:${str}`);
       const len = parseInt(str, 16);
       if (isNaN(len) || len <= 0) {
-        this.logger.error(`Wrong Content Length: ${str} -> ${len}`);
+        this.logger?.error(`Wrong Content Length: ${str} -> ${len}`);
         this.stop();
         return;
       }
       if (len > buf.length - 6) {
-        this.logger.debug(`Wait for more input ${buf.length - 6} / ${len}`);
+        this.logger?.debug(`Wait for more input ${buf.length - 6} / ${len}`);
         return; // wait for subsequent data
       }
       const content = buf.subarray(6, 6 + len).toString();
-      if (this.logger.isDebugEnabled()) {
-        this.logger.debug(`<< B:${content}`);
-      }
+      // if (this.logger?.isDebugEnabled()) {
+      this.logger?.debug(`<< B:${content}`);
+      // }
       this.receiveBuffer = buf.subarray(6 + len);
 
       let obj: any;
       try {
         obj = parse1(content);
       } catch (e) {
-        this.logger.warn(`Parse Error: ${e}`, e);
+        this.logger?.warn(`Parse Error: ${e}`, e);
         return;
       }
       try {
         this.dispatchHandler(obj);
       } catch (e) {
-        this.logger.warn(`Dispatch Error ${e}`, e);
+        this.logger?.warn(`Dispatch Error ${e}`, e);
         return;
       }
-      this.logger.debug("Dispatch OK");
+      this.logger?.debug("Dispatch OK");
       if (this.receiveBuffer.length > 6) {
-        this.logger.debug("Try to read the next buffer.");
+        this.logger?.debug("Try to read the next buffer.");
         this.onReceiveData(null);
       } else {
-        this.logger.debug("Wait for next data chunk.");
+        this.logger?.debug("Wait for next data chunk.");
       }
     }
   }
@@ -181,10 +181,10 @@ class RPCServer {
   private dispatchHandler(msg: any) {
     msg = msg.toJS();
     const type = msg.shift() as MsgType;
-    this.logger.debug(`dispatchHandler type : ${type}`, msg);
+    this.logger?.debug(`dispatchHandler type : ${type}`, msg);
     switch (type) {
       case MsgType.QUIT:
-        this.logger.debug("Quit Message Received.");
+        this.logger?.debug("Quit Message Received.");
         this.stop();
         break;
       case MsgType.CALL:
@@ -203,13 +203,13 @@ class RPCServer {
         this.handlerMethods.apply(this, msg);
         break;
       default:
-        this.logger.warn(`Unknown Message Type: ${type}`);
+        this.logger?.warn(`Unknown Message Type: ${type}`);
     }
   }
 
   // 供别人调用通过 registryMethod 注册的方法
   private handlerCall(uid: number, name: string, args: any[]) {
-    this.logger.debug(`Handler Call: ${uid} / ${name} / ${args}`);
+    this.logger?.debug(`Handler Call: ${uid} / ${name} / ${args}`);
     const method = this.methods[name];
     if (method) {
       try {
@@ -218,27 +218,27 @@ class RPCServer {
           this.queueMessage(new ReturnMessage(uid, _ret));
         });
       } catch (e) {
-        this.logger.debug(`Method [${name}] throw an error ${e}`, e);
+        this.logger?.debug(`Method [${name}] throw an error ${e}`, e);
         this.queueMessage(new ErrorMessage(uid, (e as Error).toString()));
       }
     } else {
-      this.logger.warn(`Method ${name} not found.`);
+      this.logger?.warn(`Method ${name} not found.`);
       this.queueMessage(
         new EPCErrorMessage(uid, `Not found the method: ${name}`)
       );
     }
-    this.logger.debug("Handler Call OK");
+    this.logger?.debug("Handler Call OK");
   }
 
   // 返回值可能的类型有那些？ string number object array TODO
   private handlerReturn(uid: number, value: string) {
     const m = this.session[uid];
-    // this.logger.debug('handlerReturn', uid, m);
+    // this.logger?.debug('handlerReturn', uid, m);
     if (m) {
       delete this.session[uid];
       value = tryPListToObj(value);
       // value = Array.isArray(value) ? value.map(tryPListToObj) : tryPListToObj(value);
-      this.logger.debug(`return value`, uid, JSON.stringify(value));
+      this.logger?.debug(`return value`, uid, JSON.stringify(value));
       m.deferred.resolve(value);
     }
   }
@@ -251,14 +251,14 @@ class RPCServer {
   }
 
   private handlerMethods(uid: number) {
-    this.logger.debug(`Handler Methods: ${uid}`);
+    this.logger?.debug(`Handler Methods: ${uid}`);
     const ret = Object.keys(this.methods).map((k) => {
       const m = this.methods[k];
       return [symbol(k), m.argdoc, m.docstring];
     });
     const msg = new ReturnMessage(uid, ret);
     this.queueMessage(msg);
-    this.logger.debug("Handler Methods OK");
+    this.logger?.debug("Handler Methods OK");
   }
 
   private clearWaitingSessions() {
@@ -275,17 +275,17 @@ class RPCServer {
     if (this.queueStream.length === 0) return; // do nothing
     const msg = this.queueStream.shift();
     if (msg == null) return; // ignore finish signal
-    this.logger.debug(`Stream.write: ${msg.uid}`);
+    this.logger?.debug(`Stream.write: ${msg.uid}`);
 
     let strBody: string;
     try {
-      // this.logger.debug('strBody', msg.toJSON());
+      // this.logger?.debug('strBody', msg.toJSON());
       strBody = encode(msg.toJSON(), true);
     } catch (e) {
       if (msg instanceof ReturnMessage) {
         // re-send error message with wrapping EPCStackException
         this.queueMessage(new EPCErrorMessage(msg.uid, (e as Error).message));
-        this.logger.warn(
+        this.logger?.warn(
           `Encoding error ${(e as Error).message} / recover error message.`,
           e
         );
@@ -299,7 +299,7 @@ class RPCServer {
           msg.uid,
           new EPCStackException((e as Error).message)
         );
-        this.logger.warn(
+        this.logger?.warn(
           `Encoding error ${(e as Error).message} / recover error message.`,
           e
         );
@@ -309,7 +309,7 @@ class RPCServer {
       }
 
       this.send();
-      this.logger.error(
+      this.logger?.error(
         `Encoding error ${
           (e as Error).message
         } / Could not recover the messaging.`
@@ -317,22 +317,22 @@ class RPCServer {
       return;
     }
 
-    if (this.logger.isDebugEnabled()) {
-      // this.logger.debug(`Encode: ${strBody}`);
-      const buf = Buffer.from(strBody, "utf-8");
-      const len = buf.length;
-      const bufok = this.socket.write(
-        Buffer.from(padRight(len.toString(16), "0", 6) + strBody, "utf-8")
-      );
-      this.logger.debug(
-        `Stream.ok : uid=${msg.uid} / ${len} bytes / buf:${bufok}`
-      );
-      if (bufok) {
-        this.send();
-      } else {
-        this.queueState = QueueState.STOP;
-      }
+    // if (this.logger?.isDebugEnabled()) {
+    // this.logger?.debug(`Encode: ${strBody}`);
+    const buf = Buffer.from(strBody, "utf-8");
+    const len = buf.length;
+    const bufok = this.socket.write(
+      Buffer.from(padRight(len.toString(16), "0", 6) + strBody, "utf-8")
+    );
+    this.logger?.debug(
+      `Stream.ok : uid=${msg.uid} / ${len} bytes / buf:${bufok}`
+    );
+    if (bufok) {
+      this.send();
+    } else {
+      this.queueState = QueueState.STOP;
     }
+    // }
   }
 
   /* Wait for finishing this RPCServer connection */
@@ -354,9 +354,9 @@ class RPCServer {
 
   ondrain() {
     if (this.queueState === QueueState.GO) {
-      this.logger.debug("QueueState.GO.ondrain");
+      this.logger?.debug("QueueState.GO.ondrain");
     } else {
-      this.logger.debug(
+      this.logger?.debug(
         "QueueState.STOP.ondrain : num=" + this.queueStream.length
       );
       this.queueState = QueueState.GO;
@@ -367,11 +367,11 @@ class RPCServer {
   onqueue(msg: Message | null) {
     if (!msg) return;
     if (this.queueState === QueueState.GO) {
-      this.logger.debug("QueueState.GO.onqueue : " + msg.uid);
+      this.logger?.debug("QueueState.GO.onqueue : " + msg.uid);
       this.queueStream.push(msg);
       this.send();
     } else {
-      this.logger.debug("QueueState.STOP.onqueue : " + msg.uid);
+      this.logger?.debug("QueueState.STOP.onqueue : " + msg.uid);
       this.queueStream.push(msg);
     }
   }

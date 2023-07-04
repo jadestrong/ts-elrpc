@@ -34,6 +34,8 @@
     },
     "dependencies": {
         "log4js": "^6.9.1",
+        "pino": "^8.14.1",
+        "pino-pretty": "^10.0.1",
         "ts-elparser": "file:../ts-elparser"
     }
 }
